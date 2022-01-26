@@ -44,9 +44,9 @@ class C45:
 				#discrete
 				for index,child in enumerate(node.children):
 					if child.isLeaf:
-						print(indent + node.label + " = " + attributes[index] + " : " + child.label)
+						print(indent + node.label + " = " + self.attrValues[node.label][index] + " : " + child.label)
 					else:
-						print(indent + node.label + " = " + attributes[index] + " : ")
+						print(indent + node.label + " = " + self.attrValues[node.label][index] + " : ")
 						self.printNode(child, indent + "	")
 			else:
 				#numerical
@@ -113,6 +113,21 @@ class C45:
 		else:
 			return True
 
+	def gain(self, unionSet, subsets):
+		#input : data and disjoint subsets of it
+		#output : information gain
+		S = len(unionSet)
+		#calculate impurity before split
+		impurityBeforeSplit = self.entropy(unionSet)
+		#calculate impurity after split
+		weights = [len(subset)/S for subset in subsets]
+		impurityAfterSplit = 0
+		for i in range(len(subsets)):
+			impurityAfterSplit += weights[i]*self.entropy(subsets[i])
+		#calculate total gain
+		totalGain = impurityBeforeSplit - impurityAfterSplit
+		return totalGain
+
 	def splitAttribute(self, curData, curAttributes):
 		splitted = []
 		maxEnt = -1*float("inf")
@@ -129,10 +144,10 @@ class C45:
 				subsets = [[] for a in valuesForAttribute]
 				for row in curData:
 					for index in range(len(valuesForAttribute)):
-						if row[i] == valuesForAttribute[index]:
+						if row[indexOfAttribute] == valuesForAttribute[index]:
 							subsets[index].append(row)
 							break
-				e = gain(curData, subsets)
+				e = self.gain(curData, subsets)
 				if e > maxEnt:
 					maxEnt = e
 					splitted = subsets
@@ -161,21 +176,6 @@ class C45:
 							best_threshold = threshold
 		return (best_attribute,best_threshold,splitted)
 
-	def gain(self,unionSet, subsets):
-		#input : data and disjoint subsets of it
-		#output : information gain
-		S = len(unionSet)
-		#calculate impurity before split
-		impurityBeforeSplit = self.entropy(unionSet)
-		#calculate impurity after split
-		weights = [len(subset)/S for subset in subsets]
-		impurityAfterSplit = 0
-		for i in range(len(subsets)):
-			impurityAfterSplit += weights[i]*self.entropy(subsets[i])
-		#calculate total gain
-		totalGain = impurityBeforeSplit - impurityAfterSplit
-		return totalGain
-
 	def entropy(self, dataSet):
 		S = len(dataSet)
 		if S == 0:
@@ -203,5 +203,3 @@ class Node:
 		self.threshold = threshold
 		self.isLeaf = isLeaf
 		self.children = []
-
-
